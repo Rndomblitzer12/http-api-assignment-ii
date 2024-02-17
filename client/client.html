@@ -27,14 +27,15 @@
     }
 
     let obj = await response.json();
-      
-      //If we have a message, display it.
-      if(obj.message){
+      if(obj.users){
+        content.innerHTML += `<p>${JSON.stringify(obj.users)}</p>`;
+      }
+      else if(obj.message){
         content.innerHTML += `<p>${obj.message}</p>`;
       }
   };
 
-  const sendPost = async (nameForm) => {
+    const sendPost = async (nameForm) => {
       const nameAction = nameForm.getAttribute('action');
       const nameMethod = nameForm.getAttribute('method');
       
@@ -52,8 +53,38 @@
         body: formData,
       });
       handleResponse(response);
+};
+
+    const requestUpdate = async (userForm) => {
+      const url = userForm.querySelector('#urlField').value;
+      const method = userForm.querySelector('#methodSelect').value;
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      handleResponse(response, method);
+    };
+    const init = () => {
+      const nameForm = document.querySelector('#nameForm');
+      const userForm = document.querySelector('#userForm');
+
+      nameForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        sendPost(nameForm);
+        return false;
+      });
+      userForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        requestUpdate(userForm);
+        return false;
+      });
     };
 
+    window.onload = init;
   </script>
 </head>
 <body>

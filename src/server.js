@@ -47,12 +47,10 @@ const handlePost = (request, response, parsedUrl) => {
 };
 
 const handleGet = (request, response, parsedUrl) => {
-  if (parsedUrl.pathname === '/style.css') {
-    htmlResponseHandler.getStyle(request, response);
-  } else if (parsedUrl.pathname === '/getUsers') {
-    jsonResponseHandler.getUsers(request, response);
+  if (urlStruct[request.method][parsedUrl.pathname]) {
+    urlStruct[request.method][parsedUrl.pathname](request, response);
   } else {
-    htmlResponseHandler.getIndex(request, response);
+    urlStruct[request.method].notFound(request, response);
   }
 };
 
