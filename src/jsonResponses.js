@@ -1,80 +1,26 @@
+const users = {};
+
 const respondJSON = (request, response, status, object) => {
   response.writeHead(status, { 'Content-Type': 'application/json' });
   response.write(JSON.stringify(object));
   response.end();
 };
 
-// Success - 200
-const success = (request, response) => {
+const getUsers = (request, response) => {
   const responseJSON = {
-    message: 'Response was successful.',
+    users,
   };
+
   respondJSON(request, response, 200, responseJSON);
 };
 
-// Bad Request
-const badRequest = (request, response, params) => {
-  const responseJSON = {
-    message: 'Required params are present.',
-  };
-
-  // Param missing ?valid=true / code 400
-  if (!params.valid || params.valid !== 'true') {
-    responseJSON.message = 'Missing valid query parameter set to true';
-    responseJSON.id = 'badRequest';
-    return respondJSON(request, response, 400, responseJSON);
-  }
-
-  // Has param ?valid=true / code 200
-  return respondJSON(request, response, 200, responseJSON);
+const respondJSONMeta = (request, response, status) => {
+  response.writeHead(status, { 'Content-Type': 'application/json' });
+  response.end();
 };
 
-// Unauthorized
-const unauthorized = (request, response, params) => {
-  const responseJSON = {
-    message: 'You have successfully viewed the content.',
-  };
 
-  // Param missing ?loggedIn=yes / code 401
-  if (!params.loggedIn || params.loggedIn !== 'yes') {
-    responseJSON.message = 'Missing loggedIn query parameter set to yes';
-    responseJSON.id = 'unauthorized';
-    return respondJSON(request, response, 401, responseJSON);
-  }
 
-  // Has param ?loggedIn=yes / code 200
-  return respondJSON(request, response, 200, responseJSON);
-};
-
-// Forbidden 403
-const forbidden = (request, response) => {
-  const responseJSON = {
-    message: 'You do not have access to this content.',
-    id: 'forbidden',
-  };
-
-  respondJSON(request, response, 403, responseJSON);
-};
-
-// Internal 500
-const internal = (request, response) => {
-  const responseJSON = {
-    message: 'Internal Server Error. Something went wrong.',
-    id: 'internalError',
-  };
-
-  respondJSON(request, response, 500, responseJSON);
-};
-
-// Not Implemented 501
-const notImplemented = (request, response) => {
-  const responseJSON = {
-    message: 'A get request for this page has not been implemented yet.',
-    id: 'notImplemented',
-  };
-
-  respondJSON(request, response, 501, responseJSON);
-};
 
 // Not Found 404
 const notFound = (request, response) => {
@@ -86,12 +32,56 @@ const notFound = (request, response) => {
   respondJSON(request, response, 404, responseJSON);
 };
 
+const getUsersMeta = (request, response) => respondJSONMeta(request, response, 200);
+
+
+const addUser = (request, response, body) => {
+  // default json message
+  const responseJSON = {
+    message: 'Name and age are both required.',
+  };
+
+  // check to make sure we have both fields
+  // We might want more validation than just checking if they exist
+  // This could easily be abused with invalid types (such as booleans, numbers, etc)
+  // If either are missing, send back an error message as a 400 badRequest
+  if (!body.name || !body.age) {
+    responseJSON.id = 'missingParams';
+    return respondJSON(request, response, 400, responseJSON);
+  }
+
+  // default status code to 204 updated
+  let responseCode = 204;
+
+  // If the user doesn't exist yet
+  if (!users[body.name]) {
+    // Set the status code to 201 (created) and create an empty user
+    responseCode = 201;
+    users[body.name] = {};
+  }
+
+  // add or update fields for this user name
+  users[body.name].name = body.name;
+  users[body.name].age = body.age;
+
+  // if response is created, then set our created message
+  // and sent response with a message
+  if (responseCode === 201) {
+    responseJSON.message = 'Created Successfully';
+    return respondJSON(request, response, responseCode, responseJSON);
+  }
+  // 204 has an empty payload, just a success
+  // It cannot have a body, so we just send a 204 without a message
+  // 204 will not alter the browser in any way!!!
+  return respondJSONMeta(request, response, responseCode);
+};
+
+const notFoundMeta = (request, response) => respondJSONMeta(request, response, 404);
+
 module.exports = {
-  success,
-  badRequest,
-  unauthorized,
-  forbidden,
-  internal,
-  notImplemented,
+  getUsers,
+  getUsersMeta,
+  addUser,
   notFound,
+  notFoundMeta,
 };

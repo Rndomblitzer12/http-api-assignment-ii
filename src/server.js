@@ -7,33 +7,65 @@ const jsonResponseHandler = require('./jsonResponses.js');
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
 const urlStruct = {
-  '/': htmlResponseHandler.getIndex,
-  '/success': jsonResponseHandler.success,
-  '/badRequest': jsonResponseHandler.badRequest,
-  '/unauthorized': jsonResponseHandler.unauthorized,
-  '/forbidden': jsonResponseHandler.forbidden,
-  '/internal': jsonResponseHandler.internal,
-  '/notImplemented': jsonResponseHandler.notImplemented,
-  '/notFound': jsonResponseHandler.notFound,
-  index: htmlResponseHandler.getIndex,
-  '/style.css': htmlResponseHandler.getStyle,
+  GET: {
+    '/': htmlResponseHandler.getIndex,
+    '/style.css': htmlResponseHandler.getStyle,
+    '/getUsers': jsonResponseHandler.getUsers,
+    '/notFound': jsonResponseHandler.notFound,
+  },
+
+  HEAD: {
+    '/getUsers': jsonResponseHandler.getUsersMeta,
+    '/notFound': jsonResponseHandler.notFound,
+  },
 };
+
+const parseBody = (request, response, handler) => {
+  const body = [];
+
+  request.on('error', (err) => {
+    console.dir(err);
+    response.statusCode = 400;
+    response.end();
+  });
+
+  request.on('data', (chunk) => {
+    body.push(chunk);
+  });
+
+  request.on('end', () => {
+    const bodyString = Buffer.concat(body).toString();
+    const bodyParams = query.parse(bodyString);
+    handler(request, response, bodyParams);
+  });
+};
+
+const handlePost = (request, response, parsedUrl) => {
+  if (parsedUrl.pathname === '/addUser') {
+    parseBody(request, response, jsonResponseHandler.addUser);
+  }
+};
+
+const handleGet = (request, response, parsedUrl) => {
+  if (parsedUrl.pathname === '/style.css') {
+    htmlResponseHandler.getStyle(request, response);
+  } else if (parsedUrl.pathname === '/getUsers') {
+    jsonResponseHandler.getUsers(request, response);
+  } else {
+    htmlResponseHandler.getIndex(request, response);
+  }
+};
+
 const onRequest = (request, response) => {
   const parsedUrl = url.parse(request.url);
 
-  // Accept header
-  const acceptHeaders = request.headers.accept.split(',');
-
-  const params = query.parse(parsedUrl.query);
-
-  // XML/JSON Parse
-  if (urlStruct[parsedUrl.pathname]) {
-    urlStruct[parsedUrl.pathname](request, response, params);
+  if (request.method === 'POST') {
+    handlePost(request, response, parsedUrl);
   } else {
-    urlStruct['/notFound'](request, response, params);
+    handleGet(request, response, parsedUrl);
   }
 };
 
 http.createServer(onRequest).listen(port, () => {
-  console.log(`Listening on 127.0.0.1: ${port}`);
+  console.log(`Listening on 127.0.0.1:${port}`);
 });
