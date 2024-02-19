@@ -11,18 +11,19 @@ const urlStruct = {
     '/': htmlResponseHandler.getIndex,
     '/style.css': htmlResponseHandler.getStyle,
     '/getUsers': jsonResponseHandler.getUsers,
-    '/notFound': jsonResponseHandler.notFound,
+    notFound: jsonResponseHandler.notFound,
   },
 
   HEAD: {
     '/getUsers': jsonResponseHandler.getUsersMeta,
-    '/notFound': jsonResponseHandler.notFound,
+    notFound: jsonResponseHandler.notFound,
   },
 };
 
 const parseBody = (request, response, handler) => {
   const body = [];
 
+  // Bodyparse code
   request.on('error', (err) => {
     console.dir(err);
     response.statusCode = 400;
@@ -40,12 +41,14 @@ const parseBody = (request, response, handler) => {
   });
 };
 
+// POST Requests
 const handlePost = (request, response, parsedUrl) => {
   if (parsedUrl.pathname === '/addUser') {
     parseBody(request, response, jsonResponseHandler.addUser);
   }
 };
 
+// GET Requests
 const handleGet = (request, response, parsedUrl) => {
   if (urlStruct[request.method][parsedUrl.pathname]) {
     urlStruct[request.method][parsedUrl.pathname](request, response);

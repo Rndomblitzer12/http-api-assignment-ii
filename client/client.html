@@ -20,6 +20,9 @@
         case 400:
           content.innerHTML = `<b>Bad Request</b>`;
           break;
+        case 404:
+          content.innerHTML = `<b>Not Found</b>`;
+          break;
         default:
           content.innerHTML = `<p>Status code, ${response.status}, is not implemented in your client!</p>`;
           break;

@@ -57,12 +57,11 @@ const addUser = (request, response, body) => {
   return respondJSONMeta(request, response, responseCode);
 };
 
-const notFoundMeta = (request, response) => respondJSONMeta(request, response, 404);
+// Runs the JSONMeta method, instead of writing a new method, while giving
 
 module.exports = {
   getUsers,
   getUsersMeta,
   addUser,
   notFound,
-  notFoundMeta,
 };
